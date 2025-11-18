@@ -5,7 +5,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { ChevronDownIcon, Slash } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-// import { SessionProvider, useSession } from 'next-auth/react';
+import { SessionProvider, useSession } from 'next-auth/react';
 // import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbEllipsis, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 // import { FileTree, type File } from '@/lib/file-types';
@@ -20,14 +20,10 @@ export default function ClientLayout({
     children: React.ReactNode;
 }>) {
     return (
-        // <SessionProvider>
-        // <PathProvider>
-        <>
+        <SessionProvider>
             <Layout>{children}</Layout>
             <Toaster richColors position="top-right" />
-        </>
-        // </PathProvider>
-        // </SessionProvider>
+        </SessionProvider>
     );
 }
 

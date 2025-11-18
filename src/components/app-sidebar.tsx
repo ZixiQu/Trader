@@ -1,21 +1,14 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { LogIn, UserPlus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-// import { useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
 export function AppSidebar() {
-    // const { data: session, status } = useSession();
-    const session = {
-        user: {
-            name: 'Test User',
-            email: 'test@example.com'
-        }
-    };
-
-    const status = 'authenticated';
+    const { data: session, status } = useSession();
 
     if (status === 'loading') {
         return (
