@@ -8,10 +8,82 @@ datasource db {
 }
 
 model User {
-  id             String    @id @default(uuid())
+  id             String         @id @default(uuid())
   name           String?
-  email          String    @unique
+  email          String         @unique
   hashedPassword String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  cashBalance    Decimal        @default(0.0) @db.Decimal(12, 2)
+
+  stocks         Stock[]        // User stock holdings
+  bonds          Bond[]         // User bond holdings
+  transactions   Transaction[]  // User transaction history
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+/*
+  STOCK HOLDINGS
+*/
+model Stock {
+  id        String   @id @default(uuid())
+  userId    String
+  symbol    String               // e.g. "AAPL"
+  shares    Decimal @db.Decimal(12, 4)
+  avgPrice  Decimal @db.Decimal(12, 4)
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/*
+  BOND HOLDINGS
+*/
+model Bond {
+  id         String   @id @default(uuid())
+  userId     String
+  symbol     String              // e.g. "US10Y", "CAD5Y"
+  quantity   Decimal @db.Decimal(12, 4)
+  avgPrice   Decimal @db.Decimal(12, 4)
+  maturity   DateTime?
+  couponRate Decimal? @db.Decimal(5, 2)  // annual %
+
+  user       User     @relation(fields: [userId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+/*
+  TRANSACTION HISTORY
+*/
+model Transaction {
+  id        String         @id @default(uuid())
+  userId    String
+  type      TransactionType
+  assetType AssetType
+  symbol    String
+
+  quantity  Decimal @db.Decimal(12, 4)
+  price     Decimal @db.Decimal(12, 4)
+  total     Decimal @db.Decimal(12, 2)
+
+  user      User            @relation(fields: [userId], references: [id])
+
+  createdAt DateTime        @default(now())
+}
+
+enum TransactionType {
+  BUY
+  SELL
+  DEPOSIT
+  WITHDRAW
+}
+
+enum AssetType {
+  STOCK
+  BOND
+  CASH
 }

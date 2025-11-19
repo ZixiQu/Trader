@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { STOCKS, StockSymbol } from '@/constants/stocks';
+import { STOCKS, StockSymbol } from '@/constants/assets';
 import { formatStockData } from '@/utils/formatStockData';
 
 export function useStockData(active: StockSymbol | 'ALL', range: '1d' | '1mo' | '3mo') {
