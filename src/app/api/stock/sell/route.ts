@@ -25,11 +25,13 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: 'Not enough shares to sell' }, { status: 400 });
             }
 
-            const newShares = holding.shares - quantity;
+            const newShares = Number(holding.shares) - quantity;
 
             if (newShares === 0) {
                 // Delete holding when fully sold
-                await tx.stock.delete({ where: { id: holding.id } });
+                await tx.stock.delete({
+                    where: { id: holding.id }
+                });
             } else {
                 await tx.stock.update({
                     where: { id: holding.id },
@@ -37,8 +39,7 @@ export async function POST(req: Request) {
                 });
             }
 
-            // Record transaction
-            await recordTransaction({
+            await recordTransaction(tx, {
                 userId,
                 type: 'SELL',
                 assetType: 'STOCK',

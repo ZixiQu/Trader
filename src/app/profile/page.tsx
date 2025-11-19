@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 const initialCashBalance = 1520.75;
 
@@ -86,7 +87,9 @@ export default function ProfilePage() {
             }
 
             setCash(prev => prev + amount);
-            alert(`Successfully deposited $${amount.toFixed(2)} CAD`);
+            toast.success('Deposit successful!', {
+                description: `+$${amount.toFixed(2)} CAD added to your balance.`
+            });
             setDepositInput('');
         } catch (error) {
             console.error(error);

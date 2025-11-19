@@ -15,8 +15,8 @@ export async function POST(req: Request) {
         const total = quantity * price;
 
         return await prisma.$transaction(async tx => {
-            // Fetch user
             const user = await tx.user.findUnique({ where: { id: userId } });
+
             if (!user) {
                 return NextResponse.json({ error: 'User not found' }, { status: 404 });
             }
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
                 });
             }
 
-            await recordTransaction({
+            await recordTransaction(tx, {
                 userId,
                 type: 'BUY',
                 assetType: 'STOCK',
