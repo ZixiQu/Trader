@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { LogIn, UserPlus } from 'lucide-react';
+import { LogIn, LogOut, UserPlus, User, CandlestickChart, LineChart, ArrowLeftRight, ScrollText } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -35,13 +34,33 @@ export function AppSidebar() {
         ? [
               {
                   title: session.user.name,
-                  url: '/profile'
-                  // icon: future work, include user.image as icon
+                  url: '/profile',
+                  icon: User
+              },
+              {
+                  title: 'Stocks',
+                  url: '/stocks',
+                  icon: CandlestickChart
+              },
+              {
+                  title: 'Bonds',
+                  url: '/bonds',
+                  icon: LineChart
+              },
+              {
+                  title: 'Trade',
+                  url: '/trade',
+                  icon: ArrowLeftRight
+              },
+              {
+                  title: 'Transaction',
+                  url: '/transactions',
+                  icon: ScrollText
               },
               {
                   title: 'Sign Out',
                   url: '/signout',
-                  icon: LogIn
+                  icon: LogOut
               }
           ]
         : [
@@ -63,7 +82,7 @@ export function AppSidebar() {
                 <SidebarGroup>
                     <SidebarGroupLabel asChild>
                         <Link href="/" className="cursor-pointer">
-                            NASlite
+                            Trade
                         </Link>
                     </SidebarGroupLabel>
                     <SidebarGroupContent className="mt-6">
