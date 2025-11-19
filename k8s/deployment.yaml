@@ -15,7 +15,7 @@ spec:
       containers:
         - name: trading-app
           image: zixiqu/mini-server:linux
-          imagePullPolicy: Never
+          imagePullPolicy: Always
           ports:
             - containerPort: 3000
           env:
