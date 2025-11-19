@@ -4,8 +4,18 @@ CREATE TYPE "TransactionType" AS ENUM ('BUY', 'SELL', 'DEPOSIT', 'WITHDRAW');
 -- CreateEnum
 CREATE TYPE "AssetType" AS ENUM ('STOCK', 'BOND', 'CASH');
 
--- AlterTable
-ALTER TABLE "User" ADD COLUMN     "cashBalance" DECIMAL(12,2) NOT NULL DEFAULT 0.0;
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "name" TEXT,
+    "email" TEXT NOT NULL,
+    "hashedPassword" TEXT,
+    "cashBalance" DECIMAL(12,2) NOT NULL DEFAULT 0.0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "Stock" (
@@ -49,6 +59,9 @@ CREATE TABLE "Transaction" (
 
     CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- AddForeignKey
 ALTER TABLE "Stock" ADD CONSTRAINT "Stock_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
