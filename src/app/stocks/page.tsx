@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { STOCKS, StockSymbol } from '@/constants/stocks';
+import { STOCKS, StockSymbol } from '@/constants/assets';
 import { useStockData } from '@/hooks/useStockData';
 import { mergeStockData } from '@/utils/mergeStockData';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
