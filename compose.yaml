@@ -51,7 +51,7 @@ services:
       - app-network
 
   db:
-    image: postgres:latest
+    image: postgres:16
     ports:
       - "${DB_PORT}:5432"
     environment:
