@@ -1,57 +1,66 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { recordTransaction } from '@/utils/transaction';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { recordTransaction } from '@/utils/recordTransaction';
 
 export async function POST(req: Request) {
-    try {
-        const { userId, symbol, quantity, price } = await req.json();
+	const session = await getServerSession(authOptions);
+	if (!session?.user?.id) {
+		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+	}
 
-        if (!userId || !symbol || !quantity || !price) {
-            return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
-        }
+	const { symbol, quantity, price } = await req.json();
+	if (!symbol || !quantity || !price) {
+		return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+	}
 
-        return await prisma.$transaction(async tx => {
-            const holding = await tx.stock.findFirst({
-                where: { userId, symbol }
-            });
+	const userId = session.user.id;
+	const total = quantity * price;
 
-            if (!holding) {
-                return NextResponse.json({ error: 'No holdings found for this stock' }, { status: 400 });
-            }
+	return await prisma.$transaction(async (tx) => {
+		const holding = await tx.stock.findFirst({
+			where: { userId, symbol },
+		});
 
-            if (holding.shares < quantity) {
-                return NextResponse.json({ error: 'Not enough shares to sell' }, { status: 400 });
-            }
+		if (!holding) {
+			return NextResponse.json(
+				{ error: 'No holdings found for this stock' },
+				{ status: 400 },
+			);
+		}
 
-            const newShares = Number(holding.shares) - quantity;
+		if (holding.shares < quantity) {
+			return NextResponse.json({ error: 'Not enough shares to sell' }, { status: 400 });
+		}
 
-            if (newShares === 0) {
-                // Delete holding when fully sold
-                await tx.stock.delete({
-                    where: { id: holding.id }
-                });
-            } else {
-                await tx.stock.update({
-                    where: { id: holding.id },
-                    data: { shares: newShares }
-                });
-            }
+		const newShares = Number(holding.shares) - quantity;
 
-            await recordTransaction(tx, {
-                userId,
-                type: 'SELL',
-                assetType: 'STOCK',
-                symbol,
-                quantity,
-                price
-            });
+		if (newShares === 0) {
+			await tx.stock.delete({
+				where: { id: holding.id },
+			});
+		} else {
+			await tx.stock.update({
+				where: { id: holding.id },
+				data: { shares: newShares },
+			});
+		}
 
-            return NextResponse.json({ success: true });
-        });
-    } catch (err) {
-        console.error(err);
-        return NextResponse.json({ error: 'Server error' }, { status: 500 });
-    }
+		await tx.user.update({
+			where: { id: userId },
+			data: { cashBalance: { increment: total } },
+		});
+
+		await recordTransaction(tx, {
+			userId,
+			type: 'SELL',
+			assetType: 'STOCK',
+			symbol,
+			quantity,
+			price,
+		});
+
+		return NextResponse.json({ success: true });
+	});
 }
