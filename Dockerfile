@@ -1,4 +1,4 @@
-FROM node:21-alpine AS builder
+FROM node:22 AS builder
 WORKDIR /app
 
 ARG DATABASE_URL
@@ -13,7 +13,7 @@ RUN npx prisma generate
 
 RUN npm run build
 
-FROM node:21-alpine AS runner
+FROM node:22 AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -26,3 +26,20 @@ COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
 CMD ["npm", "run", "start"]
+
+FROM node:22 AS dev
+WORKDIR /app
+
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+
+ENV NODE_ENV=development
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npx prisma generate
+
+EXPOSE 3000
+CMD ["sh", "-c", "npx prisma migrate dev && npm run dev"]
