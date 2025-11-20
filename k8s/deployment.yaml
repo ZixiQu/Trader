@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: trading-app
+  name: trader
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: trading-app
+      app: trader
   template:
     metadata:
       labels:
-        app: trading-app
+        app: trader
     spec:
       containers:
-        - name: trading-app
-          image: zixiqu/mini-server:linux
+        - name: trader
+          image: zixiqu/trader-dev:linux
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -35,7 +35,10 @@ spec:
                   name: sql-related
                   key: POSTGRES_DB
             - name: DATABASE_URL
-              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
+              valueFrom:
+                secretKeyRef:
+                  name: sql-related
+                  key: DATABASE_URL
           readinessProbe:
             httpGet:
               path: /api/health
