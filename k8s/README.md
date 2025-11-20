@@ -11,10 +11,11 @@
 
 ## Orchestration DevOps
 
-1. Start minikube
+1. Start minikube 
 
     ```sh
     minikube start --driver=docker
+    minikube start --driver=docker --force  # If root
     eval $(minikube docker-env)
     ```
 
@@ -55,13 +56,40 @@
 
 
 
+## Minikube / k8s Scale Nodes
+
+Get node lists
+
+```sh
+kubectl get nodes
+minikube node list
+```
 
 
 
+## Docker build
+
+```sh
+docker build --target dev -t zixiqu/trader:linux .  # failed
+docker tag ece1779project-api-dev:latest zixiqu/trader-dev:linux
+docker push zixiqu/trader-dev:linux
+```
 
 
 
+## Get service port
 
+```sh
+minikube service list
+┌─────────────┬──────────────────────┬──────────────┬───────────────────────────┐
+│  NAMESPACE  │         NAME         │ TARGET PORT  │            URL            │
+├─────────────┼──────────────────────┼──────────────┼───────────────────────────┤
+│ default     │ kubernetes           │ No node port │                           │
+│ default     │ postgres             │ No node port │                           │
+│ default     │ task-manager-service │ 8080         │ http://192.168.49.2:32198 │
+│ kube-system │ kube-dns             │ No node port │                           │
+└─────────────┴──────────────────────┴──────────────┴───────────────────────────┘
+```
 
 
 
