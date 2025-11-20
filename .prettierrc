@@ -1,0 +1,14 @@
+{
+    "useTabs": true,
+    "tabWidth": 4,
+    "printWidth": 100,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "semi": true,
+    "bracketSpacing": true,
+    "arrowParens": "always",
+    "proseWrap": "preserve",
+    "htmlWhitespaceSensitivity": "css",
+    "embeddedLanguageFormatting": "auto",
+    "commentPreserveNewlines": true
+}

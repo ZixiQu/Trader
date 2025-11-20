@@ -10,7 +10,8 @@ export async function POST(req: Request) {
     const { symbol, quantity, price, assetType } = await req.json();
     const qty = Number(quantity);
 
-    if (!symbol || !qty || !price || !assetType) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    if (!symbol || qty <= 0 || price <= 0 || !assetType)
+		return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
     const user = await prisma.user.findUnique({
         where: { email: session.user.email }
