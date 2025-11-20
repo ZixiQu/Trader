@@ -59,7 +59,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql/data # For Linux and MacOS
+      # - db-data:/var/lib/postgresql # For Windows
     networks:
       - app-network
     healthcheck:
