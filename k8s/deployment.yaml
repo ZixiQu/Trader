@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: trading-app
+  name: trader
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: trading-app
+      app: trader
   template:
     metadata:
       labels:
-        app: trading-app
+        app: trader
     spec:
       containers:
-        - name: trading-app
-          image: zixiqu/mini-server:linux
+        - name: trader
+          image: zixiqu/trader:macos
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -35,16 +35,31 @@ spec:
                   name: sql-related
                   key: POSTGRES_DB
             - name: DATABASE_URL
-              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
+              valueFrom:
+                secretKeyRef:
+                  name: sql-related
+                  key: DATABASE_URL
+            - name: NEXTAUTH_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sql-related
+                  key: NEXTAUTH_URL
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: sql-related
+                  key: NEXTAUTH_SECRET
           readinessProbe:
             httpGet:
-              path: /api/health
+              path: /signin
               port: 3000
             initialDelaySeconds: 5
             periodSeconds: 10
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
-              path: /api/health
+              path: /signin
               port: 3000
             initialDelaySeconds: 15
             periodSeconds: 20
+            timeoutSeconds: 5
