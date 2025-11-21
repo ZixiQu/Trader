@@ -30,8 +30,8 @@ export async function POST(req: Request) {
 				type: 'DEPOSIT',
 				assetType: 'CASH',
 				symbol: 'CASH',
-				quantity: amount,
-				price: 1,
+				quantity: 1,
+				price: amount,
 			});
 		});
 
