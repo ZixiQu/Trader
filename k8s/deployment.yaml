@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: trader
-          image: zixiqu/trader-dev:linux
+          image: zixiqu/trader:macos
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -39,6 +39,16 @@ spec:
                 secretKeyRef:
                   name: sql-related
                   key: DATABASE_URL
+            - name: NEXTAUTH_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sql-related
+                  key: NEXTAUTH_URL
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: sql-related
+                  key: NEXTAUTH_SECRET
           readinessProbe:
             httpGet:
               path: /signin
