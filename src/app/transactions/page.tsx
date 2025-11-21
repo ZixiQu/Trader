@@ -13,7 +13,7 @@ export default function TransactionsPage() {
     const limit = 10;
 
     const loadPage = async (p: number) => {
-        const res = await fetch(`/api/transactions?page=${p}&limit=${limit}`);
+        const res = await fetch(`/api/transaction?page=${p}&limit=${limit}`);
         const json = await res.json();
 
         setTransactions(json.transactions);

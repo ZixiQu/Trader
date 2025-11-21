@@ -24,7 +24,7 @@ export default function ProfilePage() {
 	const [depositInput, setDepositInput] = React.useState('');
 
 	useEffect(() => {
-		if (isError) router.replace('/401');
+		if (isError) router.push('/401');
 	}, [isError, router]);
 
 	useEffect(() => {

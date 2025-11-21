@@ -12,6 +12,7 @@ services:
         condition: service_healthy
         restart: true
     environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${DB_PORT}/${POSTGRES_DB}?schema=public"
       NEXTAUTH_URL: "http://localhost:3000"
       NEXTAUTH_SECRET: "/ga3ObSVr4lTynSHUJ/LUqIBjWf3C0KVlBIgI+DUkrKbb3KVi6JBUgERHmw="
       DB_HOST: db
@@ -59,8 +60,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - db-data:/var/lib/postgresql/data # For Linux and MacOS
-      # - db-data:/var/lib/postgresql # For Windows
+      # - db-data:/var/lib/postgresql/data # For Linux and MacOS
+      - db-data:/var/lib/postgresql # For Windows
     networks:
       - app-network
     healthcheck:
