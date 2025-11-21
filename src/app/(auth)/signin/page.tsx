@@ -11,13 +11,11 @@ export default function SignInPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
 
-    const isError = status === 'unauthenticated';
-
     useEffect(() => {
-        if (!isError) {
-            router.replace('/profile');
-        }
-    }, [isError, router]);
+		if (status === 'authenticated') {
+			router.replace('/profile');
+		}
+	}, [status]);
 
     const [logging, setLogging] = useState(false);
     const [message, setMessage] = useState('');
