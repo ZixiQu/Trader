@@ -50,7 +50,7 @@ export default function TransactionsPage() {
                                         <div>{t.symbol}</div>
 
                                         {/* Quantity */}
-                                        <div>{Number(t.quantity).toFixed(4)}</div>
+                                        <div>{Number(t.quantity * t.price).toFixed(4)}</div>
 
                                         {/* Timestamp */}
                                         <div className="text-right">{new Date(t.createdAt).toLocaleString()}</div>
