@@ -23,21 +23,22 @@ export default function ProfilePage() {
 	const [bonds, setBonds] = React.useState<any[]>([]);
 	const [depositInput, setDepositInput] = React.useState('');
 
+	async function refreshPortfolio() {
+		const res = await fetch('/api/portfolio');
+		const data = await res.json();
+
+		setCash(data.cash);
+		setStocks(data.stocks);
+		setBonds(data.bonds);
+	}
+
 	useEffect(() => {
 		if (isError) router.push('/401');
 	}, [isError, router]);
 
 	useEffect(() => {
 		if (!session?.user?.id) return;
-
-		fetch('/api/portfolio')
-			.then((res) => res.json())
-			.then((data) => {
-				setCash(data.cash);
-				setStocks(data.stocks);
-				setBonds(data.bonds);
-			})
-			.catch(() => toast.error('Failed to load portfolio'));
+		refreshPortfolio();
 	}, [session]);
 
 	if (isPending) return <div>Loading...</div>;
@@ -66,6 +67,51 @@ export default function ProfilePage() {
 		toast.success('Deposit successful');
 		setDepositInput('');
 	};
+
+	async function sellStock(symbol: string, shares: number) {
+		const res = await fetch('/api/stock/sell', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				symbol,
+				quantity: shares,
+			}),
+		});
+
+		const json = await res.json();
+
+		if (json.error) {
+			toast.error(json.error);
+			return;
+		}
+
+		toast.success(`Sold all shares of ${symbol}`);
+
+		refreshPortfolio();
+	}
+
+	async function sellBond(symbol: string, quantity: number, avgPrice: number) {
+		const res = await fetch('/api/bond/sell', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				symbol,
+				quantity,
+				price: avgPrice,
+			}),
+		});
+
+		const json = await res.json();
+
+		if (json.error) {
+			toast.error(json.error);
+			return;
+		}
+
+		toast.success(`Sold all units of ${symbol}`);
+
+		refreshPortfolio();
+	}
 
 	return (
 		<div className="p-3 space-y-8 max-w-5xl mx-auto w-full">
@@ -121,14 +167,26 @@ export default function ProfilePage() {
 						<div className="p-4 space-y-3 min-w-[380px]">
 							{stocks.map((s) => (
 								<React.Fragment key={s.symbol}>
-									<div className="grid grid-cols-3 text-sm items-center">
-										<div className="font-semibold">{s.symbol}</div>
-										<div className="text-muted-foreground">
-											{s.shares} shares
+									<div className="flex items-center justify-between text-sm">
+										<div className="flex flex-col">
+											<span className="font-semibold">{s.symbol}</span>
+											<span className="text-muted-foreground text-xs">
+												{s.shares} shares
+											</span>
 										</div>
-										<div className="text-right font-medium">
+
+										<div className="text-right font-medium mr-4">
 											${(s.shares * s.avgPrice).toFixed(2)}
 										</div>
+
+										<Button
+											variant="destructive"
+											size="sm"
+											className="w-24"
+											onClick={() => sellStock(s.symbol, Number(s.shares))}
+										>
+											Sell All
+										</Button>
 									</div>
 									<Separator />
 								</React.Fragment>
@@ -138,7 +196,7 @@ export default function ProfilePage() {
 				</CardContent>
 			</Card>
 
-			{/* BONDS */}
+			{/* BOND HOLDINGS */}
 			<Card>
 				<CardHeader>
 					<CardTitle>Bond Holdings</CardTitle>
@@ -149,14 +207,35 @@ export default function ProfilePage() {
 						<div className="p-4 space-y-3 min-w-[380px]">
 							{bonds.map((b) => (
 								<React.Fragment key={b.symbol}>
-									<div className="grid grid-cols-3 text-sm items-center">
-										<div className="font-semibold">{b.symbol}</div>
-										<div className="text-muted-foreground">
-											{b.quantity} units
+									<div className="flex items-center justify-between text-sm">
+										{/* LEFT: Symbol + units */}
+										<div className="flex flex-col">
+											<span className="font-semibold">{b.symbol}</span>
+											<span className="text-muted-foreground text-xs">
+												{b.quantity} units
+											</span>
 										</div>
-										<div className="text-right font-medium">
+
+										{/* MIDDLE: Value */}
+										<div className="text-right font-medium mr-4">
 											${(b.quantity * b.avgPrice).toFixed(2)}
 										</div>
+
+										{/* RIGHT: Sell button */}
+										<Button
+											variant="destructive"
+											size="sm"
+											className="w-24"
+											onClick={() =>
+												sellBond(
+													b.symbol,
+													Number(b.quantity),
+													Number(b.avgPrice),
+												)
+											}
+										>
+											Sell All
+										</Button>
 									</div>
 									<Separator />
 								</React.Fragment>
