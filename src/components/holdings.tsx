@@ -34,7 +34,7 @@ export function Holdings() {
 							<div className="flex justify-between text-md">
 								<div className="font-semibold">{s.symbol}</div>
 								<div className="text-muted-foreground">{s.shares} shares</div>
-								<span
+								{/* <span
 									className={
 										profit >= 0
 											? 'text-green-500 font-medium'
@@ -42,7 +42,7 @@ export function Holdings() {
 									}
 								>
 									{profit >= 0 ? '+' : '-'}${Math.abs(profit).toFixed(2)}
-								</span>
+								</span> */}
 							</div>
 							<Separator />
 						</div>

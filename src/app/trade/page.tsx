@@ -51,13 +51,15 @@ export default function TradePage() {
 
 	async function onConfirm() {
 		const asset = selectedStock ?? selectedBond;
-		const res = await fetch('/api/trade', {
+		const api = selectedStock ? '/api/stock/buy' : '/api/bond/buy';
+
+		const res = await fetch(api, {
 			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				symbol: asset,
 				quantity: units,
 				price,
-				assetType: selectedStock ? 'STOCK' : 'BOND',
 			}),
 		});
 
@@ -80,7 +82,6 @@ export default function TradePage() {
 		setPrice(null);
 	}
 
-	const selected = selectedStock ?? selectedBond;
 	const selectedDetails = selectedStock
 		? STOCK_DETAILS[selectedStock]
 		: selectedBond
@@ -99,7 +100,7 @@ export default function TradePage() {
 					</CardHeader>
 
 					<CardContent>
-						<ScrollArea className="h-[240px] rounded-md border w-full">
+						<ScrollArea className="h-full rounded-md border w-full">
 							<div className="p-3 space-y-3 min-w-[420px]">
 								{STOCKS.map((symbol) => {
 									const d = STOCK_DETAILS[symbol];
