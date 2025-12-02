@@ -5,6 +5,35 @@
 1. `npm install` & `npx prisma migrate dev --name <migration_name>` & `npx prisma generate` (redundant)
 2. `npm run dev`
 
+
+
+## On a New Linux Environment 
+
+1. Install minikube
+
+   ```sh
+   curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+   sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+   
+   ```
+
+2. Install Kubectl
+
+   ```sh
+   # https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+   
+   # 1. download kubectl
+   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"  # x86-64
+   
+   # 2. install kubectl to /bin
+   sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+   
+   # 3. clean up
+   rm kubectl
+   ```
+
+   
+
 ## Orchestration DevOps (New)
 
 1. Start minikube
@@ -12,7 +41,17 @@
     ```sh
     minikube start --driver=docker
     minikube start --driver=docker --force  # If root
+    
+    minikube start --driver=docker \
+      --force \
+      --mount \
+      --mount-string="/mnt/volume_tor1_01:/data" # If have mount volume
+      
+      
     eval $(minikube docker-env)
+    
+    # To unset eval
+    eval $(minikube docker-env -u)
     ```
 
 2. K8s start system
@@ -22,57 +61,36 @@
     ./start_all.sh
     ```
 
-3. Delete system
-
-    ```sh
-    ./close_all.sh
-    ```
-
-## Orchestration DevOps (Old)
-
-1. Start minikube
-
-    ```sh
-    minikube start --driver=docker
-    minikube start --driver=docker --force  # If root
-    eval $(minikube docker-env)
-    ```
-
-2. Acquire App image
-
-    1. Build from source
-
-        ```sh
-        # Go to App folder
-        docker build -t mini-server:latest .
-        ```
-
-    2. Pull from docker hub
-
-        ```sh
-        docker pull zixiqu/mini-server:latest
-        ```
-
-3. K8s start system
-
-    ```sh
-    cd /project_root/k8s
-    ./start_all.sh
-    ```
-
-4. Expose external IP for accessing
+3. Expose external IP for accessing
 
     ```sh
     minikube service trader-service --url &
     ```
 
-    The trader app is accessible in the browser
+    The trader app is accessible in the browser, **locally**.
+
+4. Connect outside world to local App via `socat`
+
+    ```sh
+    socat TCP-LISTEN:80,fork,reuseaddr TCP:<IPV4>:<PORT> 
+    ```
 
 5. Delete system
 
     ```sh
     ./close_all.sh
     ```
+
+5. Clean up
+
+   ```sh
+   # Nuke clean up
+   minikube delete --all --purge
+   ```
+
+   
+
+
 
 ## Minikube / k8s Scale Nodes
 
@@ -115,3 +133,57 @@ minikube service list
 k get pods
 k get service
 ```
+
+
+
+
+
+
+
+## Deprecated: Orchestration DevOps (Old)
+
+1. Start minikube
+
+   ```sh
+   minikube start --driver=docker
+   minikube start --driver=docker --force  # If root
+   eval $(minikube docker-env)
+   ```
+
+2. Acquire App image
+
+   1. Build from source
+
+      ```sh
+      # Go to App folder
+      docker build -t mini-server:latest .
+      ```
+
+   2. Pull from docker hub
+
+      ```sh
+      docker pull zixiqu/mini-server:latest
+      ```
+
+3. K8s start system
+
+   ```sh
+   cd /project_root/k8s
+   ./start_all.sh
+   ```
+
+4. Expose external IP for accessing
+
+   ```sh
+   minikube service trader-service --url &
+   ```
+
+   The trader app is accessible in the browser
+
+5. Delete system
+
+   ```sh
+   ./close_all.sh
+   ```
+
+## 
