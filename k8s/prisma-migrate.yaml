@@ -1,15 +1,17 @@
-apiVersion: v1
+apiVersion: batch/v1
 kind: Job
 metadata:
   name: prisma-migrate
 spec:
+  ttlSecondsAfterFinished: 60
+  backoffLimit: 0
   template:
     spec:
+      restartPolicy: Never
       containers:
         - name: migrate
           image: jkl315/trader:prod
-          command: ["npx","prisma","migrate","deploy"]
+          command: ["npx", "prisma", "migrate", "deploy"]
           envFrom:
             - secretRef:
                 name: sql-related
-      restartPolicy: Never
