@@ -41,7 +41,7 @@ jobs:
 
             # Fetch kubeconfig
             - name: Fetch kubeconfig
-              run: doctl kubernetes cluster kubeconfig save do-tor1-ece1779
+              run: doctl kubernetes cluster kubeconfig save ${{ secrets.DO_CLUSTER_ID }}
 
             # Apply Prisma migration job
             - name: Apply Prisma migration
