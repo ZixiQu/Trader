@@ -19,9 +19,13 @@ spec:
           envFrom:
             - secretRef:
                 name: sql-related
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           volumeMounts:
             - name: pgdata
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/postgresql/data/pgdata
+              subPath: pgdata
   volumeClaimTemplates:
     - metadata:
         name: pgdata
