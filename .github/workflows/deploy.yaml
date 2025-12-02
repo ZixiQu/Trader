@@ -1,0 +1,51 @@
+name: Deploy to DigitalOcean Kubernetes
+
+on:
+    push:
+        branches: ['CICD']
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            # Login to Docker Hub
+            - name: Login to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            # Build image
+            - name: Build Docker image
+              run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/trader:prod .
+
+            # Push image to Docker Hub
+            - name: Push Docker image
+              run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/trader:prod
+
+            # Install doctl
+            - name: Install doctl
+              uses: digitalocean/action-doctl@v2
+              with:
+                  token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+            # Fetch kubeconfig
+            - name: Fetch kubeconfig
+              run: doctl kubernetes cluster kubeconfig save do-tor1-ece1779
+
+            # Apply Prisma migration job
+            - name: Apply Prisma migration
+              run: |
+                  kubectl apply -f k8s/prisma-migrate.yaml
+                  kubectl wait --for=condition=complete job/prisma-migrate --timeout=90s
+
+            # Apply app manifests
+            - name: Deploy updated app
+              run: |
+                  kubectl apply -f k8s/postgres.yaml
+                  kubectl apply -f k8s/deployment.yaml
+                  kubectl apply -f k8s/service.yaml
