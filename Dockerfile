@@ -1,8 +1,9 @@
 FROM node:22 AS builder
 WORKDIR /app
 
-ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
+# ARG DATABASE_URL
+# ENV DATABASE_URL=${DATABASE_URL}
+ENV DATABASE_URL="postgresql://user:pass@localhost:5432/dummy"
 
 COPY package*.json ./
 RUN npm ci
