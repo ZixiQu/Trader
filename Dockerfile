@@ -1,11 +1,12 @@
 FROM node:22 AS builder
 WORKDIR /app
 
-ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
+# ARG DATABASE_URL
+# ENV DATABASE_URL=${DATABASE_URL}
+ENV DATABASE_URL="postgresql://user:pass@localhost:5432/dummy"
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 COPY . .
 
@@ -25,7 +26,8 @@ COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]
+# CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]
+CMD ["npm", "run", "start"]
 
 FROM node:22 AS dev
 WORKDIR /app

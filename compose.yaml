@@ -1,5 +1,6 @@
 services:
   api:
+    image: trader:latest
     build:
       context: .
       target: runner
