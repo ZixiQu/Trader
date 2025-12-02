@@ -27,7 +27,7 @@ export function Holdings() {
 				{stocks.map((s) => {
 					const totalCost = s.shares * Number(s.avgPrice);
 					const currentValue = s.shares * Number(s.currentPrice ?? s.avgPrice);
-					const profit = currentValue - totalCost;
+					// const profit = currentValue - totalCost;
 
 					return (
 						<div key={s.symbol}>
