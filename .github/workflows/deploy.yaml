@@ -21,7 +21,7 @@ jobs:
 
             # Build image
             - name: Build Docker image
-              run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/trader:prod .
+              run: docker build api -t ${{ secrets.DOCKERHUB_USERNAME }}/trader:prod .
 
             # Push image to Docker Hub
             - name: Push Docker image
