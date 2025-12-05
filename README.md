@@ -3,7 +3,7 @@
 ## Team Members
 
 - Jinyan Yi — 1006232881  
-- Zixi Qu — 1006143861  
+- Zixi Qu — 1006143861 - zixi.qu@mail.utoronto.ca
 - Kangzhi Gao — 1006307827 — kangzhi.gao@mail.utoronto.ca
 
 ## Introduction
@@ -108,7 +108,20 @@ By building these capabilities, the project aims to show how trading logic, data
 
 - **Kubernetes (K8s)** is used as the orchestration approach.
 - A **DigitalOcean Kubernetes** cluster runs the production workloads.
-- (More details here - Zixi)
+- The system is fully modularized and decomposed into a set of declarative manifests, that are applied in the following logical order:
+
+  1. ```secrets.yaml```: **Securely stores sensitive configuration**: `DATABASE_URL`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, etc.
+
+  2. `postgres.yaml`: Production-grade PostgreSQL instance deployed as a StatefulSet, such that it delivers:
+
+     - Guarantees consistent network identity and persistent volume attachment.  
+     - Ensures data survives pod restarts, rescheduling, or node failures.
+
+     - Includes a headless service for direct pod access and a PersistentVolumeClaim(PVC) for durable storage.
+
+  3. `deployment.yaml`: Core Next.js App. Support horizontal scalability by increasing replicas to support more parallelism. Built-in rolling updates. Health checking via `livenessProbe` and `readinessProbe`.
+
+  4. `service.yaml`: Expose the application externally via `LoadBalancer` style, that automatic round-robin load balancing across all healthy pods.
 
 ### Monitoring & Observability
 
@@ -118,17 +131,16 @@ By building these capabilities, the project aims to show how trading logic, data
 ### Advanced Features
 
 - **Real-time functionality** is supported using the Yahoo Finance API for fetching updated stock prices.
-- **Security & Authentication** is implemented with **NextAuth** in Next.js, enabling signup, signin, and signout.
-- A **CI/CD pipeline** using GitHub Actions:
+- **Security enhancements**:
+  - user authentication and authorization.
+  - secret managements via k8s secrets and GitHub CI/CD secrets.
+- A **CI/CD pipeline** using GitHub Actions enabling seamless, zero-downtime delivery of the application from code commit to production:
   - Builds production-ready Docker images
   - Pushes images to Docker Hub
   - Automatically updates the Kubernetes deployment in production
 
 ### Application Features
 
-The trading system provides the following capabilities for users:
-
-- Create an account and authenticate (signup, signin, signout)
 - Manage cash balance through **deposit**
 - Trade assets:
   - **Buy and sell stocks** (Amazon, Apple, NVIDIA)
@@ -142,14 +154,14 @@ The trading system provides the following capabilities for users:
 
 ### Accessing the Application & Authentication
 
-When the user first visits the application, they are directed to the **/signin** page.
+When the user first visits the application, they are directed to the `/signin` page.
 
 - If the user does not have an account, they can click the **Sign Up** link.
 - The signup form requires:
   - Email  
   - Password  
   - Username  
-- After successful registration (no duplicate email), the user is automatically redirected back to **/signin**.
+- After successful registration (no duplicate email), the user is automatically redirected back to `/signin`.
 - After signing in, the user is taken to the main dashboard and a left navigation panel becomes available.
 
 ### Navigation Sidebar
@@ -248,7 +260,7 @@ These variables are required to:
 - Run Prisma migrations
 - Configure NextAuth authentication
 
-### 3. (Optional) Use Docker for Local Development — Recommended
+### 3.  Use Docker for Local Development
 
 If you prefer running the database and API inside containers:
 
@@ -271,9 +283,9 @@ Access the application at:
 Persistent Storage:
 Docker Compose mounts a volume for PostgreSQL so data survives restarts.
 
-### 4. Manual Local Development
+### 4. (Optional) Manual Local Development
 
-If running the project directly on your machine:
+To deploy the project manually on your machine:
 
 #### Step 4.1 Install dependencies
 
@@ -317,27 +329,35 @@ Access the application at:
 - **Portfolio Dashboard**: confirm holdings update in real time  
 - **Transaction History**: deposits, withdrawals, trades logged correctly
 
-User Guide: How does a user interact with your application? Provide clear instructions for using each main feature, supported with screenshots where appropriate.
-
 ## Deployment Information
 
 This project is deployed at:
 
-**http://174.138.112.104:8080/**
+```
+http://174.138.112.104:8080/
+```
 
 The application is hosted on a **DigitalOcean Kubernetes** cluster, where the backend services, PostgreSQL database, and supporting components are containerized and orchestrated using K8s.
 
 ## Individual Contributions
 
-<!-- Individual Contributions: What were the specific contributions made by each team member? This should align with the Git commit history. -->
-
-### Kangzhi Gao
+### Kangzhi Gao (Connor)
 
 - Implemented the entire application logic, including the frontend interface, backend functionality, and database schema
 - Created the multi-stage Dockerfile to separate development and production builds
 - Set up Docker Compose for both local development and production image building
 - Deployed the application to DigitalOcean Kubernetes
 - Built the CI/CD pipeline using GitHub Actions to automate Docker image creation, pushing to Docker Hub, and updating the DigitalOcean Kubernetes deployment
+
+### Zixi Qu (Jessy)
+
+- Design and developed orchestration procedures. Implement k8s manifests. The design decision takes simplicity into consideration and make sure minimum effort migration to a new environment.
+- Build the first version of local orchestration and cloud orchestration (on single droplet server). This is a critical step before migrate the exact same orchestration to a larger scale cluster (DO k8s clusters, which was managed by [Kangzhi Gao](#Kangzhi Gao)
+- Involved in designing the overall architecture of the project, this includes: application features, deployment decision, and technologies decision, ensures the project can be delivered at a reasonable scale in the given time allowance.
+
+### Jinyan Yi (Alex)
+
+To be filled.
 
 ## Lessons Learned
 
