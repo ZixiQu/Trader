@@ -126,7 +126,7 @@ By building these capabilities, the project aims to show how trading logic, data
 
 ### Application Features
 
-The trading system provides the following capabilities for end users:
+The trading system provides the following capabilities for users:
 
 - Create an account and authenticate (signup, signin, signout)
 - Manage cash balance through **deposit**
