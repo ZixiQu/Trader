@@ -2,7 +2,7 @@
 
 ## Team Members
 
-- Jinyan Yi — 1006232881  
+- Jinyan Yi — 1006232881 alexjy.yi@mail.utoronto.ca
 - Zixi Qu — 1006143861 - zixi.qu@mail.utoronto.ca
 - Kangzhi Gao — 1006307827 — kangzhi.gao@mail.utoronto.ca
 
@@ -75,23 +75,23 @@ By building these capabilities, the project aims to show how trading logic, data
 
 - The application backend and database are fully containerized using **Docker**, ensuring consistent runtime environments across development and production.
 - A **multi-stage Dockerfile** is implemented to optimize the build process and reduce production image size:
-  - **Builder Stage (`builder`)**  
-    - Installs dependencies using `npm ci`  
-    - Generates the Prisma client  
-    - Compiles the Next.js application into an optimized `.next` build  
-    - This stage contains development tools but does not appear in the final image  
-  - **Production Runner Stage (`runner`)**  
-    - Copies only the compiled build output and minimal runtime dependencies  
-    - Excludes source code, dev dependencies, and build tools  
-    - Produces a smaller, faster, and more secure production image  
-    - Runs the production server using `npm run start`  
-  - **Local Development Stage (`dev`)**  
-    - Installs all dependencies (including dev dependencies)  
-    - Runs `prisma db push` and `npm run dev` with hot reload  
-    - Provides a smooth developer experience without requiring separate tooling  
+  - **Builder Stage (`builder`)**
+    - Installs dependencies using `npm ci`
+    - Generates the Prisma client
+    - Compiles the Next.js application into an optimized `.next` build
+    - This stage contains development tools but does not appear in the final image
+  - **Production Runner Stage (`runner`)**
+    - Copies only the compiled build output and minimal runtime dependencies
+    - Excludes source code, dev dependencies, and build tools
+    - Produces a smaller, faster, and more secure production image
+    - Runs the production server using `npm run start`
+  - **Local Development Stage (`dev`)**
+    - Installs all dependencies (including dev dependencies)
+    - Runs `prisma db push` and `npm run dev` with hot reload
+    - Provides a smooth developer experience without requiring separate tooling
 - **Docker Compose** is used to orchestrate the API container (`api-dev`) and PostgreSQL during local development:
-  - Automatically injects `DATABASE_URL` for developer workflows  
-  - Ensures both services start together with proper networking  
+  - Automatically injects `DATABASE_URL` for developer workflows
+  - Ensures both services start together with proper networking
   - Provides a reproducible environment without manual database setup
 
 ### State Management & Persistent Storage
@@ -110,19 +110,14 @@ By building these capabilities, the project aims to show how trading logic, data
 - A **DigitalOcean Kubernetes** cluster runs the production workloads.
 - The system is fully modularized and decomposed into a set of declarative manifests, that are applied in the following logical order:
 
-  1. ```secrets.yaml```: **Securely stores sensitive configuration**: `DATABASE_URL`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, etc.
-
+  1. ``secrets.yaml``: **Securely stores sensitive configuration**: `DATABASE_URL`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, etc.
   2. `postgres.yaml`: Production-grade PostgreSQL instance deployed as a StatefulSet, such that it delivers:
 
-     - Guarantees consistent network identity and persistent volume attachment.  
+     - Guarantees consistent network identity and persistent volume attachment.
      - Ensures data survives pod restarts, rescheduling, or node failures.
-
      - Includes a headless service for direct pod access and a PersistentVolumeClaim(PVC) for durable storage.
-
   3. `deployment.yaml`: Core Next.js App. Support horizontal scalability by increasing replicas to support more parallelism. Built-in rolling updates. Health checking via `livenessProbe` and `readinessProbe`.
-
   4. `service.yaml`: Expose the application externally via `LoadBalancer` style, that automatic round-robin load balancing across all healthy pods.
-
   5. `prisma-migrate.yaml`: Defines a one-time Kubernetes Job responsible for running Prisma schema migrations in production. It ensures the database is fully up-to-date before application rollout by executing `prisma migrate deploy` inside the production image used by the app.
 
 ### Monitoring & Observability
@@ -139,56 +134,38 @@ By building these capabilities, the project aims to show how trading logic, data
 ### Advanced Features
 
 - **Real-time functionality** is supported using the Yahoo Finance API for fetching updated stock prices.
-
 - **Security enhancements**:
+
   - user authentication and authorization.
   - secret managements via Kubernetes secrets and GitHub CI/CD secrets.
+- A **CI/CD pipeline** using GitHub Actions enabling seamless, zero-downtime delivery of the application from code commit to production.The pipeline automates the entire release process:
 
-- A **CI/CD pipeline** using GitHub Actions enabling seamless, zero-downtime delivery of the application from code commit to production.  
-  The pipeline automates the entire release process:
+  - **Source checkout**The workflow begins with checking out the latest code from the `main` branch, ensuring every commit triggers a consistent and reproducible build.
+  - **Docker Hub authentication**The workflow logs into Docker Hub using encrypted CI/CD secrets (`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`) to allow pushing production images.
+  - **Image building using Docker Compose**The API service image is built from the local `docker-compose` configuration. This ensures consistent builds between development and CI environments.
+  - **Image tagging and pushing to Docker Hub**The generated `trader:latest` image is tagged as a production image (`trader:prod`) and uploaded to Docker Hub, making it available for Kubernetes to pull the latest version.
+  - **DigitalOcean CLI (doctl) integration**The workflow installs the DigitalOcean CLI using `digitalocean/action-doctl`, authenticated via a CI secret (`DIGITALOCEAN_ACCESS_TOKEN`).This allows the pipeline to securely interact with the DigitalOcean Kubernetes cluster.
+  - **Kubernetes cluster authentication**Using `doctl kubernetes cluster kubeconfig save`, the workflow retrieves the cluster’s kubeconfig into the runner so that subsequent `kubectl` commands operate directly against the production cluster.
+  - **Database migration automation**A Kubernetes Job (`prisma-migrate.yaml`) is applied and executed.After submission, the workflow waits for the job to complete using:
+    `kubectl wait --for=condition=complete job/prisma-migrate`.This ensures schema migrations are applied *before* rolling out the new application deployment.
+  - **Applying application manifests**After migrations complete, the CI pipeline applies only the manifests necessary for runtime updates:
 
-  - **Source checkout**  
-    The workflow begins with checking out the latest code from the `main` branch, ensuring every commit triggers a consistent and reproducible build.
-
-  - **Docker Hub authentication**  
-    The workflow logs into Docker Hub using encrypted CI/CD secrets (`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`) to allow pushing production images.
-
-  - **Image building using Docker Compose**  
-    The API service image is built from the local `docker-compose` configuration. This ensures consistent builds between development and CI environments.
-
-  - **Image tagging and pushing to Docker Hub**  
-    The generated `trader:latest` image is tagged as a production image (`trader:prod`) and uploaded to Docker Hub, making it available for Kubernetes to pull the latest version.
-
-  - **DigitalOcean CLI (doctl) integration**  
-    The workflow installs the DigitalOcean CLI using `digitalocean/action-doctl`, authenticated via a CI secret (`DIGITALOCEAN_ACCESS_TOKEN`).  
-    This allows the pipeline to securely interact with the DigitalOcean Kubernetes cluster.
-
-  - **Kubernetes cluster authentication**  
-    Using `doctl kubernetes cluster kubeconfig save`, the workflow retrieves the cluster’s kubeconfig into the runner so that subsequent `kubectl` commands operate directly against the production cluster.
-
-  - **Database migration automation**  
-    A Kubernetes Job (`prisma-migrate.yaml`) is applied and executed.  
-    After submission, the workflow waits for the job to complete using:
-    `kubectl wait --for=condition=complete job/prisma-migrate`.  
-    This ensures schema migrations are applied *before* rolling out the new application deployment.
-
-  - **Applying application manifests**  
-    After migrations complete, the CI pipeline applies only the manifests necessary for runtime updates:
     - `postgres.yaml`
     - `deployment.yaml`
     - `service.yaml`
 
     These files represent:
+
     - the database StatefulSet and volumes,
     - the deployment that pulls the updated Docker image,
     - and the service exposing the application endpoint.
 
-    The workflow intentionally **does not** apply the secrets manifest (`secret.yaml`).  
-    This is because Kubernetes secrets contain production credentials (DB password, JWT secrets, API keys), and re-applying them through CI/CD is unsafe. Secrets should:
+    The workflow intentionally **does not** apply the secrets manifest (`secret.yaml`).This is because Kubernetes secrets contain production credentials (DB password, JWT secrets, API keys), and re-applying them through CI/CD is unsafe. Secrets should:
+
     - be created **manually once** in the cluster,
     - remain stable across deployments,
-    - and not be overwritten or regenerated automatically.  
-    GitHub Actions cannot store raw secret YAML files safely since Kubernetes secrets are only base64-encoded (not encrypted). Automatically reapplying them during CI/CD could break existing workloads or expose sensitive data.
+    - and not be overwritten or regenerated automatically.
+      GitHub Actions cannot store raw secret YAML files safely since Kubernetes secrets are only base64-encoded (not encrypted). Automatically reapplying them during CI/CD could break existing workloads or expose sensitive data.
 
     By applying only non-sensitive manifests, the CI/CD pipeline ensures safe, repeatable deployments without modifying critical secrets already stored in the cluster.
 
@@ -199,7 +176,7 @@ By building these capabilities, the project aims to show how trading logic, data
 - Manage cash balance through **deposit**
 - Trade assets:
   - **Buy and sell stocks** (Amazon, Apple, NVIDIA)
-  - **Buy and sell bonds** (US Treasury Bond, Canada Savings Bond)  
+  - **Buy and sell bonds** (US Treasury Bond, Canada Savings Bond)
     *Bond interest simplified to fixed 100% gain upon selling*
 - View stock and bond information (e.g., price, historical data)
 - Review complete **transaction history**
@@ -213,9 +190,9 @@ When the user first visits the application, they are directed to the `/signin` p
 
 - If the user does not have an account, they can click the **Sign Up** link.
 - The signup form requires:
-  - Email  
-  - Password  
-  - Username  
+  - Email
+  - Password
+  - Username
 - After successful registration (no duplicate email), the user is automatically redirected back to `/signin`.
 - After signing in, the user is taken to the main dashboard and a left navigation panel becomes available.
 
@@ -252,22 +229,22 @@ Features include:
 - A dropdown menu on the **top-left** allows selecting which stock to display.
 - A dropdown menu on the **top-right** allows changing the historical date range.
 - A holdings panel on the right shows:
-  - Current stock quantities owned  
-  - A button that navigates directly to the **Trade** page for buying/selling  
+  - Current stock quantities owned
+  - A button that navigates directly to the **Trade** page for buying/selling
 
 ### Trading Stocks and Bonds (`/trade`)
 
 The Trade page provides two lists:
 
-- **Stocks (left box)**: AMZN, AAPL, NVDA  
-- **Bonds (right box)**: US Treasury Bond, Canada Savings Bond  
+- **Stocks (left box)**: AMZN, AAPL, NVDA
+- **Bonds (right box)**: US Treasury Bond, Canada Savings Bond
 
 Interaction flow:
 
-1. Select a stock or bond to trade.  
+1. Select a stock or bond to trade.
 2. A details panel appears showing current price and input fields.
-3. Enter the number of units you want to buy.  
-4. The total cost is automatically calculated.  
+3. Enter the number of units you want to buy.
+4. The total cost is automatically calculated.
 5. Click **Confirm Trade** to complete the transaction.
 
 Trades update the user’s holdings, balance, and transaction history immediately.
@@ -276,11 +253,11 @@ Trades update the user’s holdings, balance, and transaction history immediatel
 
 The Transactions page provides a chronological list of all user activity, including:
 
-- Deposits  
-- Stock purchases  
-- Stock sales  
-- Bond purchases  
-- Bond sales  
+- Deposits
+- Stock purchases
+- Stock sales
+- Bond purchases
+- Bond sales
 
 Each record shows the asset, transaction type, quantity, price, and timestamp.
 
@@ -311,6 +288,7 @@ DB_PORT="5432"
 ```
 
 These variables are required to:
+
 - Connect to PostgreSQL
 - Run Prisma migrations
 - Configure NextAuth authentication
@@ -324,10 +302,11 @@ docker compose up --build api-dev
 ```
 
 This will:
-- Start PostgreSQL inside Docker  
-- Build the **api-dev** (development-stage) image  
-- Run Prisma schema synchronization (`prisma db push`)  
-- Start Next.js dev server with hot reload  
+
+- Start PostgreSQL inside Docker
+- Build the **api-dev** (development-stage) image
+- Run Prisma schema synchronization (`prisma db push`)
+- Start Next.js dev server with hot reload
 
 Access the application at:
 
@@ -381,7 +360,7 @@ Access the application at:
 - **Trading**:
   - Buy/sell **stocks** (AAPL, AMZN, NVDA)
   - Buy/sell **bonds** (fixed 100% return on sell)
-- **Portfolio Dashboard**: confirm holdings update in real time  
+- **Portfolio Dashboard**: confirm holdings update in real time
 - **Transaction History**: deposits, withdrawals, trades logged correctly
 
 ## Deployment Information
@@ -420,15 +399,19 @@ Please note that there is a possibility the cluster could be attacked. This happ
 
 ### Jinyan Yi (Alex)
 
-To be filled.
+- **Feature Implementation**: Designed and implemented the new **Bonds Trading** module (including the dedicated `/bonds` page), expanding the platform's asset diversity. This involved full-stack development from frontend UI components to backend API integration and database schema validation.
+
+- **Quality Assurance & Testing**: Conducted rigorous testing of the entire trading flow, identifying and fixing critical bugs related to transaction consistency and UI responsiveness. Verified system resilience against container restarts and database failovers.
+
+- **Presentation & Documentation**: Led the creation of project presentation materials and the final demo video. Structured the narrative to effectively showcase technical achievements like containerization, orchestration, and stateful design.
 
 ## Lessons Learned
 
 Through building and deploying this project, we gained practical experience across containerization, orchestration, backend workflows, and deployment pipelines.
 
-- Containerization with Docker, especially using Docker Compose, allows multi-service applications to be set up and configured efficiently, improving performance, consistency, and maintainability.  
-- Using a multi-stage Dockerfile significantly reduces the production image size and makes the build process cleaner and more optimized.  
-- Deploying on DigitalOcean Kubernetes revealed that managed K8s provides a powerful and convenient IaaS experience, but the cost can be high for student or small-scale projects.  
-- Working with Prisma introduced challenges related to schema generation and database migrations during containerization and orchestration. Through this, we developed a deeper understanding of how Prisma workflows integrate with different environments and how to prepare future applications for similar setups.  
-- Kubernetes provided valuable insights into deploying real applications on a cluster, managing pods, handling restarts, and understanding containerized workloads at scale.  
-- Due to time limitations, not all planned application features were fully implemented. The project will continue to be improved in the future with additional functionality and refinements.  
+- Containerization with Docker, especially using Docker Compose, allows multi-service applications to be set up and configured efficiently, improving performance, consistency, and maintainability.
+- Using a multi-stage Dockerfile significantly reduces the production image size and makes the build process cleaner and more optimized.
+- Deploying on DigitalOcean Kubernetes revealed that managed K8s provides a powerful and convenient IaaS experience, but the cost can be high for student or small-scale projects.
+- Working with Prisma introduced challenges related to schema generation and database migrations during containerization and orchestration. Through this, we developed a deeper understanding of how Prisma workflows integrate with different environments and how to prepare future applications for similar setups.
+- Kubernetes provided valuable insights into deploying real applications on a cluster, managing pods, handling restarts, and understanding containerized workloads at scale.
+- Due to time limitations, not all planned application features were fully implemented. The project will continue to be improved in the future with additional functionality and refinements.
