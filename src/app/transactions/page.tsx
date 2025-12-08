@@ -36,28 +36,47 @@ export default function TransactionsPage() {
 
                 <CardContent>
                     <ScrollArea className="w-full rounded-md border">
-                        <div className="p-4 space-y-3">
-                            {transactions.map(t => (
-                                <React.Fragment key={t.id}>
-                                    <div className="grid grid-cols-5 text-sm items-center">
-                                        {/* Type */}
-                                        <div className="font-semibold">{t.type}</div>
+                        <div className="p-4 space-y-3 min-w-[700px]">
+                            {/* Header row */}
+                            <div className="grid grid-cols-6 text-xs font-semibold text-muted-foreground pb-2 border-b">
+                                <div>Type</div>
+                                <div>Asset</div>
+                                <div>Symbol</div>
+                                <div className="text-right">Units</div>
+                                <div className="text-right">Total (Price × Units)</div>
+                                <div className="text-right">Timestamp</div>
+                            </div>
 
-                                        {/* Asset */}
-                                        <div className="text-muted-foreground">{t.assetType}</div>
+                            {transactions.map(t => {
+                                const quantity = Number(t.quantity || 0);
+                                const price = Number(t.price || 0);
+                                const total = quantity * price;
 
-                                        {/* Symbol */}
-                                        <div>{t.symbol}</div>
+                                return (
+                                    <React.Fragment key={t.id}>
+                                        <div className="grid grid-cols-6 text-sm items-center py-1">
+                                            {/* Type */}
+                                            <div className="font-semibold">{t.type}</div>
 
-                                        {/* Quantity */}
-                                        <div>{Number(t.quantity * t.price).toFixed(4)}</div>
+                                            {/* Asset */}
+                                            <div className="text-muted-foreground">{t.assetType}</div>
 
-                                        {/* Timestamp */}
-                                        <div className="text-right">{new Date(t.createdAt).toLocaleString()}</div>
-                                    </div>
-                                    <Separator />
-                                </React.Fragment>
-                            ))}
+                                            {/* Symbol */}
+                                            <div>{t.symbol}</div>
+
+                                            {/* Units */}
+                                            <div className="text-right">{quantity.toFixed(4)}</div>
+
+                                            {/* Total value */}
+                                            <div className="text-right">{total.toFixed(4)}</div>
+
+                                            {/* Timestamp */}
+                                            <div className="text-right">{new Date(t.createdAt).toLocaleString()}</div>
+                                        </div>
+                                        <Separator />
+                                    </React.Fragment>
+                                );
+                            })}
                         </div>
                     </ScrollArea>
 

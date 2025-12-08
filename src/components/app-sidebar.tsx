@@ -43,11 +43,16 @@ export function AppSidebar() {
                   url: '/stocks',
                   icon: CandlestickChart
               },
-            //   {
-            //       title: 'Bonds',
-            //       url: '/bonds',
-            //       icon: LineChart
-            //   },
+              {
+                  title: 'Crypto',
+                  url: '/crypto',
+                  icon: CandlestickChart
+              },
+              {
+                  title: 'Bonds',
+                  url: '/bonds',
+                  icon: LineChart
+              },
               {
                   title: 'Trade',
                   url: '/trade',
