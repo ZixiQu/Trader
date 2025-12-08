@@ -34,10 +34,10 @@ By building these capabilities, the project aims to show how trading logic, data
 ### Key Features
 
 - User Authentication – Secure login and account management
-- Trading Engine – Buy/sell functionality for two asset types: stocks and bonds
-- Portfolio Management – Real-time visualization of user holdings
+- Trading Engine – Buy/sell functionality for three asset types: **stocks, bonds, and cryptocurrencies**
+- Portfolio Management – Real-time visualization of user holdings (including crypto)
 - Transaction History – Track deposits, withdrawals, and executed trades
-- Interest Simulation – For simplicity, bonds yield a fixed 100% return when sold
+- Real-time Market Data – Live prices for stocks, bonds (via ETFs), and major cryptocurrencies (BTC, ETH, DOGE)
 
 ## Technical Stack
 
@@ -241,11 +241,12 @@ trader-service   LoadBalancer   10.109.3.119   <PUBLIC_IP>        8080:30940/TCP
 - Manage cash balance through **deposit**
 - Trade assets:
   - **Buy and sell stocks** (Amazon, Apple, NVIDIA)
-  - **Buy and sell bonds** (US Treasury Bond, Canada Savings Bond)
-    *Bond interest simplified to fixed 100% gain upon selling*
-- View stock and bond information (e.g., price, historical data)
-- Review complete **transaction history**
-- See **portfolio** and current holdings in real time
+  - **Buy and sell bonds** via liquid bond ETFs (e.g., TLT, XGB.TO) using real-time market prices
+  - **Buy and sell cryptocurrencies** (Bitcoin `BTC-USD`, Ethereum `ETH-USD`, Dogecoin `DOGE-USD`)
+  - Support for **fractional quantities** (e.g., 1.25 shares or 0.5 BTC)
+- View stock, bond, and crypto information (e.g., price, historical data)
+- Review complete **transaction history** with quantity, notional value, and timestamps
+- See **portfolio** and current holdings in real time, including unrealized P/L
 
 ## User Guide
 
@@ -267,6 +268,7 @@ Once signed in, a navigation sidebar appears on the left, providing quick access
 
 - **Profile (Portfolio Overview)**
 - **Stocks**
+- **Crypto**
 - **Trade**
 - **Transactions**
 
@@ -283,11 +285,11 @@ On this page, users can:
 
 ### Viewing Stock Data (`/stocks`)
 
-The Stocks page provides real-time and historical market data.
+The Stocks page provides real-time and historical market data for traditional equities.
 
 Features include:
 
-- A **line chart** that plots historical prices for the three available stocks:
+- A **line chart** that plots historical prices for the available stocks:
   - Amazon (AMZN)
   - Apple (AAPL)
   - NVIDIA (NVDA)
@@ -296,33 +298,46 @@ Features include:
 - A holdings panel on the right shows:
   - Current stock quantities owned
   - A button that navigates directly to the **Trade** page for buying/selling
+  - A compact summary of unrealized profit/loss for each holding
 
-### Trading Stocks and Bonds (`/trade`)
+### Viewing Crypto Data (`/crypto`)
 
-The Trade page provides two lists:
+The Crypto page mirrors the Stocks page but focuses on digital assets:
 
-- **Stocks (left box)**: AMZN, AAPL, NVDA
-- **Bonds (right box)**: US Treasury Bond, Canada Savings Bond
+- Real-time and historical charts for:
+  - Bitcoin (`BTC-USD`)
+  - Ethereum (`ETH-USD`)
+  - Dogecoin (`DOGE-USD`)
+- Users can switch between assets and time ranges (1 day / 1 month / 3 months).
+- The right-hand holdings panel shows current crypto positions and links to the **Trade** page.
+
+### Trading Stocks, Bonds, and Crypto (`/trade`)
+
+The Trade page provides three lists:
+
+- **Stocks (left column)**: AMZN, AAPL, NVDA
+- **Crypto (left column)**: BTC-USD, ETH-USD, DOGE-USD
+- **Bonds (right column)**: bond ETFs such as TLT and XGB.TO
 
 Interaction flow:
 
-1. Select a stock or bond to trade.
-2. A details panel appears showing current price and input fields.
-3. Enter the number of units you want to buy.
-4. The total cost is automatically calculated.
-5. Click **Confirm Trade** to complete the transaction.
+1. Select a stock, bond, or crypto asset to trade.
+2. A trade details panel appears showing current market price and a quantity input.
+3. Toggle between **Buy** and **Sell** mode.
+4. Enter the number of units (supports fractional quantities, e.g., 0.25 BTC).
+5. For buys, the total cost is automatically calculated.
+6. Click **Confirm Buy** or **Confirm Sell** to complete the transaction.
 
-Trades update the user’s holdings, balance, and transaction history immediately.
+Trades immediately update the user’s holdings, cash balance, and transaction history.
 
 ### Viewing Transaction History (`/transactions`)
 
 The Transactions page provides a chronological list of all user activity, including:
 
 - Deposits
-- Stock purchases
-- Stock sales
-- Bond purchases
-- Bond sales
+- Stock purchases and sales
+- Bond purchases and sales
+- Crypto purchases and sales
 
 Each record shows the asset, transaction type, quantity, price, and timestamp.
 
@@ -424,7 +439,8 @@ Access the application at:
 - **Cash Management**: deposit and verify new balance
 - **Trading**:
   - Buy/sell **stocks** (AAPL, AMZN, NVDA)
-  - Buy/sell **bonds** (fixed 100% return on sell)
+  - Buy/sell **bonds** via bond ETFs (e.g., TLT, XGB.TO) using live prices
+  - Buy/sell **cryptocurrencies** (BTC-USD, ETH-USD, DOGE-USD) with fractional quantities
 - **Portfolio Dashboard**: confirm holdings update in real time
 - **Transaction History**: deposits, withdrawals, trades logged correctly
 
@@ -465,9 +481,7 @@ Please note that there is a possibility the cluster could be attacked. This happ
 ### Jinyan Yi (Alex)
 
 - **Feature Implementation**: Designed and implemented the new **Bonds Trading** module (including the dedicated `/bonds` page), expanding the platform's asset diversity. This involved full-stack development from frontend UI components to backend API integration and database schema validation.
-
 - **Quality Assurance & Testing**: Conducted rigorous testing of the entire trading flow, identifying and fixing critical bugs related to transaction consistency and UI responsiveness. Verified system resilience against container restarts and database failovers.
-
 - **Presentation & Documentation**: Led the creation of project presentation materials and the final demo video. Structured the narrative to effectively showcase technical achievements like containerization, orchestration, and stateful design.
 
 ## Lessons Learned
