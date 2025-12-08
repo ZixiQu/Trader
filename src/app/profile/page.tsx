@@ -10,6 +10,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { isMarketOpen, isCrypto } from '@/utils/marketStatus';
 
 export default function ProfilePage() {
 	const { data: session, status } = useSession();
@@ -22,6 +23,7 @@ export default function ProfilePage() {
 	const [stocks, setStocks] = React.useState<any[]>([]);
 	const [bonds, setBonds] = React.useState<any[]>([]);
 	const [depositInput, setDepositInput] = React.useState('');
+	const [prices, setPrices] = React.useState<Record<string, number>>({});
 
 	async function refreshPortfolio() {
 		const res = await fetch('/api/portfolio');
@@ -30,6 +32,32 @@ export default function ProfilePage() {
 		setCash(data.cash);
 		setStocks(data.stocks);
 		setBonds(data.bonds);
+
+		// Fetch current prices
+		const allSymbols = [
+			...(data.stocks?.map((s: any) => s.symbol) || []),
+			...(data.bonds?.map((b: any) => b.symbol) || []),
+		];
+
+		if (allSymbols.length > 0) {
+			Promise.all(
+				allSymbols.map(async (symbol) => {
+					try {
+						const res = await fetch(`/api/price?asset=${symbol}`);
+						const json = await res.json();
+						return { symbol, price: json.price };
+					} catch {
+						return { symbol, price: null };
+					}
+				})
+			).then((results) => {
+				const priceMap: Record<string, number> = {};
+				results.forEach((r) => {
+					if (r.price) priceMap[r.symbol] = r.price;
+				});
+				setPrices(priceMap);
+			});
+		}
 	}
 
 	useEffect(() => {
@@ -39,13 +67,34 @@ export default function ProfilePage() {
 	useEffect(() => {
 		if (!session?.user?.id) return;
 		refreshPortfolio();
+
+		const timer = setInterval(() => {
+			// Similar logic to Holdings: if we have crypto, update 24/7
+			const hasCrypto = stocks.some(s => isCrypto(s.symbol));
+			const shouldUpdate = hasCrypto ? true : isMarketOpen('STOCK', null);
+
+			if (!document.hidden && shouldUpdate) {
+				refreshPortfolio();
+			}
+		}, 5000);
+
+		return () => clearInterval(timer);
 	}, [session]);
 
 	if (isPending) return <div>Loading...</div>;
 	if (isError) return null;
 
-	const totalStockValue = stocks.reduce((sum, s) => sum + s.shares * s.avgPrice, 0);
-	const totalBondValue = bonds.reduce((sum, b) => sum + b.quantity * b.avgPrice, 0);
+	// Calculate Net Worth using LIVE prices if available, otherwise fallback to avgPrice
+	const totalStockValue = stocks.reduce((sum, s) => {
+		const price = prices[s.symbol] ?? s.avgPrice;
+		return sum + s.shares * price;
+	}, 0);
+
+	const totalBondValue = bonds.reduce((sum, b) => {
+		const price = prices[b.symbol] ?? b.avgPrice;
+		return sum + b.quantity * price;
+	}, 0);
+
 	const totalNetWorth = cash + totalStockValue + totalBondValue;
 
 	const handleDeposit = async () => {
@@ -90,14 +139,13 @@ export default function ProfilePage() {
 		refreshPortfolio();
 	}
 
-	async function sellBond(symbol: string, quantity: number, avgPrice: number) {
+	async function sellBond(symbol: string, quantity: number) {
 		const res = await fetch('/api/bond/sell', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				symbol,
 				quantity,
-				price: avgPrice,
 			}),
 		});
 
@@ -165,18 +213,36 @@ export default function ProfilePage() {
 				<CardContent>
 					<ScrollArea className="h-[220px] w-full rounded-md border">
 						<div className="p-4 space-y-3 min-w-[380px]">
-							{stocks.map((s) => (
+							{stocks.map((s) => {
+								const avgPrice = Number(s.avgPrice);
+								const currentPrice = prices[s.symbol];
+								let profit = 0;
+								let profitPercent = 0;
+
+								if (currentPrice) {
+									profit = (currentPrice - avgPrice) * s.shares;
+									profitPercent = ((currentPrice - avgPrice) / avgPrice) * 100;
+								}
+								
+								return (
 								<React.Fragment key={s.symbol}>
 									<div className="flex items-center justify-between text-sm">
 										<div className="flex flex-col">
 											<span className="font-semibold">{s.symbol}</span>
 											<span className="text-muted-foreground text-xs">
-												{s.shares} shares
+												{s.shares} shares @ ${avgPrice.toFixed(2)}
 											</span>
 										</div>
 
-										<div className="text-right font-medium mr-4">
-											${(s.shares * s.avgPrice).toFixed(2)}
+										<div className="flex flex-col text-right mr-4">
+											<span className="font-medium">
+												${(s.shares * (currentPrice ?? avgPrice)).toFixed(2)}
+											</span>
+											{currentPrice && (
+												<span className={`text-xs ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+													{profit >= 0 ? '+' : ''}{profitPercent.toFixed(2)}% (${Math.abs(profit).toFixed(2)})
+												</span>
+											)}
 										</div>
 
 										<Button
@@ -190,7 +256,7 @@ export default function ProfilePage() {
 									</div>
 									<Separator />
 								</React.Fragment>
-							))}
+							)})}
 						</div>
 					</ScrollArea>
 				</CardContent>
@@ -205,20 +271,38 @@ export default function ProfilePage() {
 				<CardContent>
 					<ScrollArea className="h-[220px] w-full rounded-md border">
 						<div className="p-4 space-y-3 min-w-[380px]">
-							{bonds.map((b) => (
+							{bonds.map((b) => {
+								const avgPrice = Number(b.avgPrice);
+								const currentPrice = prices[b.symbol];
+								let profit = 0;
+								let profitPercent = 0;
+
+								if (currentPrice) {
+									profit = (currentPrice - avgPrice) * b.quantity;
+									profitPercent = ((currentPrice - avgPrice) / avgPrice) * 100;
+								}
+
+								return (
 								<React.Fragment key={b.symbol}>
 									<div className="flex items-center justify-between text-sm">
 										{/* LEFT: Symbol + units */}
 										<div className="flex flex-col">
 											<span className="font-semibold">{b.symbol}</span>
 											<span className="text-muted-foreground text-xs">
-												{b.quantity} units
+												{b.quantity} units @ ${avgPrice.toFixed(2)}
 											</span>
 										</div>
 
 										{/* MIDDLE: Value */}
-										<div className="text-right font-medium mr-4">
-											${(b.quantity * b.avgPrice).toFixed(2)}
+										<div className="flex flex-col text-right mr-4">
+											<span className="font-medium">
+												${(b.quantity * (currentPrice ?? avgPrice)).toFixed(2)}
+											</span>
+											{currentPrice && (
+												<span className={`text-xs ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+													{profit >= 0 ? '+' : ''}{profitPercent.toFixed(2)}% (${Math.abs(profit).toFixed(2)})
+												</span>
+											)}
 										</div>
 
 										{/* RIGHT: Sell button */}
@@ -230,7 +314,6 @@ export default function ProfilePage() {
 												sellBond(
 													b.symbol,
 													Number(b.quantity),
-													Number(b.avgPrice),
 												)
 											}
 										>
@@ -239,7 +322,7 @@ export default function ProfilePage() {
 									</div>
 									<Separator />
 								</React.Fragment>
-							))}
+							)})}
 						</div>
 					</ScrollArea>
 				</CardContent>

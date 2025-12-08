@@ -35,7 +35,14 @@ export async function POST(req: Request) {
 
 			const avg = existing.avgPrice.toNumber();
 
-			const sellPrice = avg * 2;
+			const priceResp = await fetch(`${process.env.NEXTAUTH_URL}/api/price?asset=${symbol}`);
+			const priceJson = await priceResp.json();
+			const sellPrice = Number(priceJson.price);
+
+			if (!sellPrice || sellPrice <= 0) {
+				throw new Error('INVALID_MARKET_PRICE');
+			}
+
 			const totalGain = qty * sellPrice;
 
 			const newQty = oldQty - qty;

@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { STOCKS, StockSymbol } from '@/constants/assets';
+import { CRYPTO, CryptoSymbol } from '@/constants/assets';
 import { formatStockData } from '@/utils/formatStockData';
-import { isMarketOpen } from '@/utils/marketStatus';
 
-export function useStockData(active: StockSymbol | 'ALL', range: '1d' | '1mo' | '3mo') {
+export function useCryptoData(active: CryptoSymbol | 'ALL', range: '1d' | '1mo' | '3mo') {
     const [data, setData] = useState<Record<string, any>>({});
     const interval = range === '1d' ? '1m' : '1d';
 
@@ -13,11 +12,12 @@ export function useStockData(active: StockSymbol | 'ALL', range: '1d' | '1mo' | 
         let cancelled = false;
 
         const load = async () => {
-            const symbols = active === 'ALL' ? STOCKS : [active];
+            const symbols = active === 'ALL' ? CRYPTO : [active];
             const results: Record<string, any> = {};
 
             await Promise.all(
                 symbols.map(async symbol => {
+                    // Reusing the stock API endpoint as it works for crypto too
                     const res = await fetch(`/api/stock?symbol=${symbol}&range=${range}&interval=${interval}`, { cache: 'no-store' });
                     const json = await res.json();
                     results[symbol] = formatStockData(json);
@@ -32,10 +32,7 @@ export function useStockData(active: StockSymbol | 'ALL', range: '1d' | '1mo' | 
         load();
 
         const timer = setInterval(() => {
-            const symbolToCheck = active === 'ALL' ? null : active;
-            const shouldUpdate = isMarketOpen('STOCK', symbolToCheck);
-
-            if (!document.hidden && shouldUpdate) {
+            if (!document.hidden) {
                 load();
             }
         }, 5000);
