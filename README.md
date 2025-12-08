@@ -120,6 +120,71 @@ By building these capabilities, the project aims to show how trading logic, data
   4. `service.yaml`: Expose the application externally via `LoadBalancer` style, that automatic round-robin load balancing across all healthy pods.
   5. `prisma-migrate.yaml`: Defines a one-time Kubernetes Job responsible for running Prisma schema migrations in production. It ensures the database is fully up-to-date before application rollout by executing `prisma migrate deploy` inside the production image used by the app.
 
+### Deploying on DigitalOcean Kubernetes
+
+#### Save Kubeconfig
+
+After creating the Kubernetes cluster on DigitalOcean, save the kubeconfig locally:
+
+```bash
+doctl kubernetes cluster kubeconfig save <CLUSTER_ID>
+```
+
+#### Apply YAML Manifests (In Order)
+
+Apply each Kubernetes resource step-by-step:
+
+```bash
+kubectl apply -f secret.yaml        # Database secrets
+kubectl apply -f postgres.yaml      # PostgreSQL (StatefulSet + PVC)
+kubectl apply -f deployment.yaml    # Application Deployment
+kubectl apply -f service.yaml       # Expose the app (LoadBalancer)
+```
+
+#### Reset / Clean Up (If Something Goes Wrong)
+
+If PostgreSQL or the application fails, delete resources in the correct order:
+
+```bash
+kubectl delete statefulset postgres
+kubectl delete pods postgres-0
+kubectl delete pvc pgdata-postgres-0
+```
+
+Then remove app + DB configs:
+
+```bash
+kubectl delete -f service.yaml
+kubectl delete -f deployment.yaml
+kubectl delete -f postgres.yaml
+kubectl delete -f secret.yaml
+```
+
+#### Check Pod Status
+
+Verify everything is running:
+
+```bash
+kubectl get pods
+```
+
+#### Get External IP
+
+Retrieve service IPs:
+
+```bash
+kubectl get svc
+```
+
+Example output:
+
+```
+NAME             TYPE           CLUSTER-IP     EXTERNAL-IP        PORT(S)           AGE
+kubernetes       ClusterIP      10.109.0.1     <none>             443/TCP           77m
+postgres         ClusterIP      None           <none>             5432/TCP          10m
+trader-service   LoadBalancer   10.109.3.119   <PUBLIC_IP>        8080:30940/TCP    89s
+```
+
 ### Monitoring & Observability
 
 - **DigitalOcean Monitoring** is enabled to track CPU, memory, and disk usage.
