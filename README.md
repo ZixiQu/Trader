@@ -123,6 +123,8 @@ By building these capabilities, the project aims to show how trading logic, data
 
   4. `service.yaml`: Expose the application externally via `LoadBalancer` style, that automatic round-robin load balancing across all healthy pods.
 
+  5. `prisma-migrate.yaml`: Defines a one-time Kubernetes Job responsible for running Prisma schema migrations in production. It ensures the database is fully up-to-date before application rollout by executing `prisma migrate deploy` inside the production image used by the app.
+
 ### Monitoring & Observability
 
 - **DigitalOcean Monitoring** is enabled to track CPU, memory, and disk usage.
@@ -137,13 +139,60 @@ By building these capabilities, the project aims to show how trading logic, data
 ### Advanced Features
 
 - **Real-time functionality** is supported using the Yahoo Finance API for fetching updated stock prices.
+
 - **Security enhancements**:
   - user authentication and authorization.
-  - secret managements via k8s secrets and GitHub CI/CD secrets.
-- A **CI/CD pipeline** using GitHub Actions enabling seamless, zero-downtime delivery of the application from code commit to production:
-  - Builds production-ready Docker images
-  - Pushes images to Docker Hub
-  - Automatically updates the Kubernetes deployment in production
+  - secret managements via Kubernetes secrets and GitHub CI/CD secrets.
+
+- A **CI/CD pipeline** using GitHub Actions enabling seamless, zero-downtime delivery of the application from code commit to production.  
+  The pipeline automates the entire release process:
+
+  - **Source checkout**  
+    The workflow begins with checking out the latest code from the `main` branch, ensuring every commit triggers a consistent and reproducible build.
+
+  - **Docker Hub authentication**  
+    The workflow logs into Docker Hub using encrypted CI/CD secrets (`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`) to allow pushing production images.
+
+  - **Image building using Docker Compose**  
+    The API service image is built from the local `docker-compose` configuration. This ensures consistent builds between development and CI environments.
+
+  - **Image tagging and pushing to Docker Hub**  
+    The generated `trader:latest` image is tagged as a production image (`trader:prod`) and uploaded to Docker Hub, making it available for Kubernetes to pull the latest version.
+
+  - **DigitalOcean CLI (doctl) integration**  
+    The workflow installs the DigitalOcean CLI using `digitalocean/action-doctl`, authenticated via a CI secret (`DIGITALOCEAN_ACCESS_TOKEN`).  
+    This allows the pipeline to securely interact with the DigitalOcean Kubernetes cluster.
+
+  - **Kubernetes cluster authentication**  
+    Using `doctl kubernetes cluster kubeconfig save`, the workflow retrieves the cluster’s kubeconfig into the runner so that subsequent `kubectl` commands operate directly against the production cluster.
+
+  - **Database migration automation**  
+    A Kubernetes Job (`prisma-migrate.yaml`) is applied and executed.  
+    After submission, the workflow waits for the job to complete using:
+    `kubectl wait --for=condition=complete job/prisma-migrate`.  
+    This ensures schema migrations are applied *before* rolling out the new application deployment.
+
+  - **Applying application manifests**  
+    After migrations complete, the CI pipeline applies only the manifests necessary for runtime updates:
+    - `postgres.yaml`
+    - `deployment.yaml`
+    - `service.yaml`
+
+    These files represent:
+    - the database StatefulSet and volumes,
+    - the deployment that pulls the updated Docker image,
+    - and the service exposing the application endpoint.
+
+    The workflow intentionally **does not** apply the secrets manifest (`secret.yaml`).  
+    This is because Kubernetes secrets contain production credentials (DB password, JWT secrets, API keys), and re-applying them through CI/CD is unsafe. Secrets should:
+    - be created **manually once** in the cluster,
+    - remain stable across deployments,
+    - and not be overwritten or regenerated automatically.  
+    GitHub Actions cannot store raw secret YAML files safely since Kubernetes secrets are only base64-encoded (not encrypted). Automatically reapplying them during CI/CD could break existing workloads or expose sensitive data.
+
+    By applying only non-sensitive manifests, the CI/CD pipeline ensures safe, repeatable deployments without modifying critical secrets already stored in the cluster.
+
+![action](./assets/action.png)
 
 ### Application Features
 
@@ -348,6 +397,10 @@ The application is hosted on a **DigitalOcean Kubernetes** cluster, where the ba
 ![DO-Kubernetes](./assets/DO-Kubernetes.png)
 
 ![loadBalancer](./assets/loadBalancer.png)
+
+Please note that there is a possibility the cluster could be attacked. This happened previously when one of the nodes in my DigitalOcean Kubernetes deployment (running on shared-CPU instances) was compromised and used to generate outgoing malicious traffic. As a result, DigitalOcean automatically disabled the node for security reasons. If a similar incident occurs during grading, the cluster may be temporarily shut down by DigitalOcean, and I would need to log into the DigitalOcean Kubernetes control panel and manually recycle the nodes. This recovery process typically takes about 5–10 minutes.
+
+![attack](./assets/attack.png)
 
 ## Individual Contributions
 
