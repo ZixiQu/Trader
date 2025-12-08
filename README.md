@@ -128,6 +128,12 @@ By building these capabilities, the project aims to show how trading logic, data
 - **DigitalOcean Monitoring** is enabled to track CPU, memory, and disk usage.
 - An alert is configured to notify when CPU usage exceeds **70% for more than 5 minutes**.
 
+![monitor1](./assets/monitor1.png)
+
+![monitor2](./assets/monitor2.png)
+
+![alert](./assets/alert.png)
+
 ### Advanced Features
 
 - **Real-time functionality** is supported using the Yahoo Finance API for fetching updated stock prices.
@@ -338,6 +344,10 @@ http://174.138.112.104:8080/
 ```
 
 The application is hosted on a **DigitalOcean Kubernetes** cluster, where the backend services, PostgreSQL database, and supporting components are containerized and orchestrated using K8s.
+
+![DO-Kubernetes](./assets/DO-Kubernetes.png)
+
+![loadBalancer](./assets/loadBalancer.png)
 
 ## Individual Contributions
 
