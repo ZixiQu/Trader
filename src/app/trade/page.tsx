@@ -263,7 +263,7 @@ export default function TradePage() {
 				</Card>
 
 				{/* Trade details panel */}
-				<Card className="flex-1">
+				<Card>
 					<CardHeader>
 						<CardTitle>Trade Details</CardTitle>
 					</CardHeader>
