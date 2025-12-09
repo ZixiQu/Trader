@@ -1,4 +1,8 @@
-# Proposal
+# Trader
+
+[Video Demo](https://drive.google.com/file/d/10SzbdUMGpUiTOwAJqkGkPtUEa4ae1ZqD/view?usp=sharing)
+
+[Link to system](http://174.138.112.104:8080/signin)
 
 ## Team Members
 
@@ -480,9 +484,9 @@ Please note that there is a possibility the cluster could be attacked. This happ
 
 ### Jinyan Yi (Alex)
 
-- **Feature Implementation**: Designed and implemented the new **Bonds Trading** module (including the dedicated `/bonds` page), expanding the platform's asset diversity. This involved full-stack development from frontend UI components to backend API integration and database schema validation.
-- **Quality Assurance & Testing**: Conducted rigorous testing of the entire trading flow, identifying and fixing critical bugs related to transaction consistency and UI responsiveness. Verified system resilience against container restarts and database failovers.
-- **Presentation & Documentation**: Led the creation of project presentation materials and the final demo video. Structured the narrative to effectively showcase technical achievements like containerization, orchestration, and stateful design.
+- **Feature Implementation**: Designed and implemented the new **Bonds and Crypto Trading** modules, including the dedicated `/bonds` and `/crypto` pages, and the unified `/trade` page. Extended the trading engine to support real-time bond ETF pricing, cryptocurrency trading (BTC, ETH, DOGE), fractional quantities, and profit/loss visualization in both the profile dashboard and holdings sidebar.
+- **Quality Assurance & Testing**: Performed end-to-end testing of stock, bond, and crypto trades, including edge cases around insufficient funds and partial quantities. Verified transaction consistency, portfolio updates, and real-time price refresh behaviour in both local Docker and DigitalOcean Kubernetes environments.
+- **Presentation & Demo**: Led the creation of project presentation materials, the final demo video, and major updates to this `README`.
 
 ## Lessons Learned
 
