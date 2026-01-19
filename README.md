@@ -93,7 +93,7 @@ By building these capabilities, the project aims to show how trading logic, data
     - Installs all dependencies (including dev dependencies)
     - Runs `prisma db push` and `npm run dev` with hot reload
     - Provides a smooth developer experience without requiring separate tooling
-- **Docker Compose** is used to orchestrate the API container (`api-dev`) and PostgreSQL during local development:
+- **Docker Compose** is used to orchestrate the API container (`dev`) and PostgreSQL during local development:
   - Automatically injects `DATABASE_URL` for developer workflows
   - Ensures both services start together with proper networking
   - Provides a reproducible environment without manual database setup
@@ -382,13 +382,13 @@ These variables are required to:
 If you prefer running the database and API inside containers:
 
 ```
-docker compose up --build api-dev
+docker compose up --build dev
 ```
 
 This will:
 
 - Start PostgreSQL inside Docker
-- Build the **api-dev** (development-stage) image
+- Build the **dev** (development-stage) image
 - Run Prisma schema synchronization (`prisma db push`)
 - Start Next.js dev server with hot reload
 
