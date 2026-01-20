@@ -13,12 +13,12 @@ export default function TransactionsPage() {
     const limit = 10;
 
     const loadPage = async (p: number) => {
-        const res = await fetch(`/api/transaction?page=${p}&limit=${limit}`);
-        const json = await res.json();
+        const res = await fetch(`/api/transactions?page=${p}&limit=${limit}`);
+		const json = await res.json();
 
-        setTransactions(json.transactions);
-        setTotalPages(json.totalPages);
-        setPage(json.page);
+		setTransactions(json.data);
+		setTotalPages(json.pagination.totalPages);
+		setPage(json.pagination.page);
     };
 
     React.useEffect(() => {

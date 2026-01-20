@@ -19,12 +19,12 @@ jobs:
                   username: ${{ secrets.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-            # Build the API image using docker compose
-            - name: Build API image
-              run: docker compose build api
+            # Build the Prod image using docker compose
+            - name: Build Prod image
+              run: docker compose build prod
 
             # Tag the image for Docker Hub
-            - name: Tag API image for Docker Hub
+            - name: Tag Prod image for Docker Hub
               run: |
                 LOCAL_IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "trader:latest")
                 docker tag $LOCAL_IMAGE ${{ secrets.DOCKERHUB_USERNAME }}/trader:prod
