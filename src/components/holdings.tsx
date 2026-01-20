@@ -29,7 +29,7 @@ export function Holdings() {
 					Promise.all(
 						allSymbols.map(async (symbol) => {
 							try {
-								const res = await fetch(`/api/price?asset=${symbol}`);
+								const res = await fetch(`/api/prices?symbol=${symbol}`);
 								const json = await res.json();
 								return { symbol, price: json.price };
 							} catch {

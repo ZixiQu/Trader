@@ -43,13 +43,13 @@ export default function ProfilePage() {
 			Promise.all(
 				allSymbols.map(async (symbol) => {
 					try {
-						const res = await fetch(`/api/price?asset=${symbol}`);
+						const res = await fetch(`/api/prices?symbol=${symbol}`);
 						const json = await res.json();
 						return { symbol, price: json.price };
 					} catch {
 						return { symbol, price: null };
 					}
-				})
+				}),
 			).then((results) => {
 				const priceMap: Record<string, number> = {};
 				results.forEach((r) => {
@@ -70,7 +70,7 @@ export default function ProfilePage() {
 
 		const timer = setInterval(() => {
 			// Similar logic to Holdings: if we have crypto, update 24/7
-			const hasCrypto = stocks.some(s => isCrypto(s.symbol));
+			const hasCrypto = stocks.some((s) => isCrypto(s.symbol));
 			const shouldUpdate = hasCrypto ? true : isMarketOpen('STOCK', null);
 
 			if (!document.hidden && shouldUpdate) {
@@ -101,9 +101,10 @@ export default function ProfilePage() {
 		const amount = parseFloat(depositInput);
 		if (isNaN(amount) || amount <= 0) return alert('Invalid amount');
 
-		const res = await fetch('/api/cash/deposit', {
+		const res = await fetch('/api/cash', {
 			method: 'POST',
-			body: JSON.stringify({ amount }),
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ action: 'DEPOSIT', amount }),
 		});
 
 		if (!res.ok) {
@@ -118,12 +119,20 @@ export default function ProfilePage() {
 	};
 
 	async function sellStock(symbol: string, shares: number) {
-		const res = await fetch('/api/stock/sell', {
+		// Get current price for the stock
+		const priceRes = await fetch(`/api/prices?symbol=${symbol}`);
+		const priceData = await priceRes.json();
+		const currentPrice = priceData.price || 0;
+
+		const res = await fetch('/api/transactions', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
+				action: 'SELL',
+				assetType: 'STOCK',
 				symbol,
 				quantity: shares,
+				price: currentPrice,
 			}),
 		});
 
@@ -140,12 +149,20 @@ export default function ProfilePage() {
 	}
 
 	async function sellBond(symbol: string, quantity: number) {
-		const res = await fetch('/api/bond/sell', {
+		// Get current price for the bond
+		const priceRes = await fetch(`/api/prices?symbol=${symbol}`);
+		const priceData = await priceRes.json();
+		const currentPrice = priceData.price || 0;
+
+		const res = await fetch('/api/transactions', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
+				action: 'SELL',
+				assetType: 'BOND',
 				symbol,
 				quantity,
+				price: currentPrice,
 			}),
 		});
 

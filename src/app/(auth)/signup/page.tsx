@@ -17,7 +17,7 @@ export default function SignUpPage() {
 		const password = formData.get('password');
 		const name = formData.get('name');
 
-		const res = await fetch('/api/register', {
+		const res = await fetch('/api/auth/register', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

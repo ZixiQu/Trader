@@ -36,7 +36,7 @@ export default function TradePage() {
 	const [price, setPrice] = useState<number | null>(null);
 
 	async function loadPrice(asset: string) {
-		const res = await fetch(`/api/price?asset=${asset}`, { cache: 'no-store' });
+		const res = await fetch(`/api/prices?symbol=${asset}`, { cache: 'no-store' });
 		const json = await res.json();
 		setPrice(json.price ?? null);
 	}
@@ -91,24 +91,20 @@ export default function TradePage() {
 		const asset = selectedStock ?? selectedCrypto ?? selectedBond;
 		if (!asset || units <= 0) return;
 
-		// BUY: stocks + crypto use /api/stock/buy, bonds use /api/bond/buy
-		// SELL: stocks + crypto use /api/stock/sell, bonds use /api/bond/sell
-		let api = '';
-		const payload: any = {
+		// Determine asset type: stocks and crypto are STOCK, bonds are BOND
+		const assetType = selectedBond ? 'BOND' : 'STOCK';
+
+		const payload = {
+			action: mode,
+			assetType,
 			symbol: asset,
 			quantity: units,
+			price: price || 0,
 		};
 
-		if (mode === 'BUY') {
-			if (!price) return;
-			payload.price = price;
-			api = selectedBond ? '/api/bond/buy' : '/api/stock/buy';
-		} else {
-			// In SELL mode price is determined server-side using market price
-			api = selectedBond ? '/api/bond/sell' : '/api/stock/sell';
-		}
+		if (mode === 'BUY' && !price) return;
 
-		const res = await fetch(api, {
+		const res = await fetch('/api/transactions', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(payload),
